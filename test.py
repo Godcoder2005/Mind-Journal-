@@ -30,3 +30,16 @@ response = requests.post(f"{BASE}/agent/chat",
 )
 print("Status:", response.status_code)
 print("Agent response:", response.json())
+
+# test nightly checkin
+checkin = requests.post(f"{BASE}/insights/checkin/submit",
+    headers = headers,
+    json = {
+        "best_moment":        "Finally understood the LangGraph pipeline",
+        "reaction_moment":    "Got frustrated when the server kept crashing",
+        "patience_test":      "The bcrypt error took 2 hours to fix",
+        "blame_target":       "I blamed myself for not reading the docs properly",
+        "tomorrow_intention": "Test the full pipeline end to end"
+    }
+)
+print("Checkin:", checkin.json())

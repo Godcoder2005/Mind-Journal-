@@ -4,7 +4,7 @@ from utils.state import MindJournal
 from datetime import datetime
 
 def Memory_save(state: MindJournal) -> MindJournal:  # ← only state, no db
-    db = SessionLocal()  # ← create db session inside the function
+    db = SessionLocal() 
     try:
         query     = state['query']
         user_id   = state['user_id']
@@ -47,6 +47,4 @@ def Memory_save(state: MindJournal) -> MindJournal:  # ← only state, no db
         db.close()
 
 def NodeName(state: MindJournal) -> MindJournal:
-    # only state as parameter
-    # create db session INSIDE the function
     db = SessionLocal()
