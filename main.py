@@ -1,12 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from db.database import engine
+from db.database import engine,SessionLocal
 from db import models
+from typing import Annotated
+from sqlalchemy.orm import Session
 from routes import auth, journal, agent, insights, energy
 
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Mind Mirror API")
+app = FastAPI(title="Mind Journal API")
 
 app.add_middleware(
     CORSMiddleware,

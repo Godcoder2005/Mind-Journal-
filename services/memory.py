@@ -1,34 +1,52 @@
-from datetime import datetime
+from db.database import SessionLocal
 from db.models import JournalEntry
 from utils.state import MindJournal
+from datetime import datetime
 
-def Memory_save(state: MindJournal, db) -> MindJournal:
+def Memory_save(state: MindJournal) -> MindJournal:  # ← only state, no db
+    db = SessionLocal()  # ← create db session inside the function
+    try:
+        query     = state['query']
+        user_id   = state['user_id']
+        sentiment = state['sentiment_result']
+        patterns  = state['pattern_result']
+        now       = datetime.now()
 
-    sentiment = state["sentiment_result"]
-    pattern   = state["pattern_result"]
+        entry = JournalEntry(
+            user_id         = user_id,
+            content         = query,
+            energy_score    = sentiment['energy_score'],
+            valence         = sentiment['sentiment_score'],
+            mood            = sentiment['mood'],
+            primary_emotion = sentiment['primary_emotion'],
+            themes          = ", ".join(patterns['recurring_themes']),
+            goals_mentioned = ", ".join(patterns['goals_mentioned']),
+            people_mentioned = ", ".join(patterns['people_mentioned']),
+            word_count      = len(query.split()),
+            hour_of_day     = now.hour,
+            day_of_week     = now.weekday(),
+            created_at      = now
+        )
 
-    entry = JournalEntry(
-        user_id = state["user_id"],
+        db.add(entry)
+        db.commit()
 
-        content = state["query"],
+        return {
+            **state,
+            "memory_saved": True
+        }
 
-        # sentiment
-        energy_score = sentiment.get("energy_score"),
-        valence = sentiment.get("sentiment_score"),
-        primary_emotion = sentiment.get("primary_emotion"),
+    except Exception as e:
+        db.rollback()
+        print(f"Memory_save failed: {e}")
+        return {
+            **state,
+            "memory_saved": False
+        }
+    finally:
+        db.close()
 
-        # patterns
-        themes = ",".join(pattern.get("recurring_themes", [])),
-        goals_mentioned = ",".join(pattern.get("goals_mentioned", [])),
-        people_mentioned = ",".join(pattern.get("people_mentioned", [])),
-
-        # metadata
-        word_count = len(state["query"].split()),
-        hour_of_day = datetime.now().hour,
-        day_of_week = datetime.now().weekday()
-    )
-
-    db.add(entry)
-    db.commit()
-    db.refresh(entry)
-    return state
+def NodeName(state: MindJournal) -> MindJournal:
+    # only state as parameter
+    # create db session INSIDE the function
+    db = SessionLocal()

@@ -1,13 +1,11 @@
-from langgraph.graph import StateGraph,START,END
-from pydantic import BaseModel
-from typing import TypedDict,Optional
+from typing import TypedDict, Optional
 
 class MindJournal(TypedDict):
-    query: str
-    orchestration:Optional[dict]
-    sentiment_result:Optional[dict]
-    pattern_result:Optional[dict]
-    insight_result:Optional[dict]
-    memory_saved:Optional[bool]
-    graph_updated:Optional[bool]
-
+    query:             str
+    user_id:           int        # ← must be here
+    orchestration:     Optional[dict]
+    sentiment_result:  Optional[dict]
+    pattern_result:    Optional[dict]
+    insight_result:    Optional[dict]
+    knowledge_updated: Optional[bool]
+    memory_saved:      Optional[bool]

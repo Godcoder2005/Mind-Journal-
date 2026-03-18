@@ -13,28 +13,26 @@ class User(Base):
 class JournalEntry(Base):
     __tablename__ = "journal_entries"
 
-    id           = Column(Integer, primary_key=True, index=True)
-    user_id      = Column(Integer, ForeignKey("users.id"), nullable=False)
-
-    # journal content
-    content      = Column(Text, nullable=False)
+    id               = Column(Integer, primary_key=True, index=True)
+    user_id          = Column(Integer, ForeignKey("users.id"), nullable=False)
+    content          = Column(Text, nullable=False)
 
     # sentiment analysis
-    energy_score = Column(Float, nullable=True)
-    valence      = Column(Float, nullable=True)
-    primary_emotion = Column(String, nullable=True)
+    energy_score     = Column(Float,   nullable=True)
+    valence          = Column(Float,   nullable=True)
+    mood             = Column(String,  nullable=True)   # ← add this
+    primary_emotion  = Column(String,  nullable=True)
 
     # pattern analysis
-    themes       = Column(Text, nullable=True)
-    goals_mentioned = Column(Text, nullable=True)
-    people_mentioned = Column(Text, nullable=True)
+    themes           = Column(Text,    nullable=True)
+    goals_mentioned  = Column(Text,    nullable=True)
+    people_mentioned = Column(Text,    nullable=True)
 
     # metadata
-    word_count   = Column(Integer, nullable=True)
-    hour_of_day  = Column(Integer, nullable=True)
-    day_of_week  = Column(Integer, nullable=True)
-
-    created_at   = Column(DateTime, server_default=func.now())
+    word_count       = Column(Integer, nullable=True)
+    hour_of_day      = Column(Integer, nullable=True)
+    day_of_week      = Column(Integer, nullable=True)
+    created_at       = Column(DateTime, server_default=func.now())
 
 class Insight(Base):
     __tablename__ = "insights"
@@ -45,11 +43,6 @@ class Insight(Base):
     content    = Column(Text, nullable=False)
 
     type       = Column(String, nullable=False)
-    # examples:
-    # weekly_summary
-    # energy_pattern
-    # future_self_letter
-    # behavioral_pattern
     created_at = Column(DateTime, server_default=func.now())
 
 
@@ -73,6 +66,20 @@ class EnergyForecast(Base):
     advice           = Column(Text)
     reasoning        = Column(Text)
     created_at       = Column(DateTime, server_default=func.now())
+
+class OnboardingAnswer(Base):
+    __tablename__ = "onboarding_answers"
+    id         = Column(Integer, primary_key=True)
+    user_id    = Column(Integer, ForeignKey("users.id"))
+    question   = Column(Text)
+    answer     = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+
+class OnboardingComplete(Base):
+    __tablename__ = "onboarding_complete"
+    id           = Column(Integer, primary_key=True)
+    user_id      = Column(Integer, ForeignKey("users.id"), unique=True)
+    completed_at = Column(DateTime, server_default=func.now())
 
 
 class KnowledgeRelationship(Base):
@@ -105,3 +112,16 @@ class FutureLetter(Base):
     mood_summary = Column(String)    # overall mood this month
     avg_energy   = Column(Float)     # avg energy this month
     created_at   = Column(DateTime, server_default=func.now())
+
+class NightlyCheckin(Base):
+    __tablename__ = "nightly_checkins"
+    
+    id                 = Column(Integer, primary_key=True)
+    user_id            = Column(Integer, ForeignKey("users.id"))
+    best_moment        = Column(Text, nullable=True)
+    reaction_moment    = Column(Text, nullable=True)
+    patience_test      = Column(Text, nullable=True)
+    blame_target       = Column(Text, nullable=True)
+    tomorrow_intention = Column(Text, nullable=True)
+    day_of_week        = Column(Integer, nullable=True)
+    created_at         = Column(DateTime, server_default=func.now())

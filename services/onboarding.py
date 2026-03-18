@@ -1,10 +1,7 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel
 from db.database import SessionLocal
-from db.models import (
-    OnboardingAnswer, OnboardingComplete,
-    KnowledgeEntity, KnowledgeRelationship
-)
+from db.models import (OnboardingAnswer, OnboardingComplete,KnowledgeEntity, KnowledgeRelationship)
 from datetime import datetime
 
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.2)
