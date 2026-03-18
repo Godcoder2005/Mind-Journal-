@@ -1,22 +1,18 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from db.database import SessionLocal
-from db.models import (
-    JournalEntry, KnowledgeEntity,
-    KnowledgeRelationship, AlterEgoSession
-)
+from db.models import JournalEntry, KnowledgeEntity, KnowledgeRelationship, AlterEgoSession
+from services.rag import retrieve_similar_entries
 from sqlalchemy import desc
 from datetime import datetime
 
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.7)
 
-# ─────────────────────────────────────────────
-# Step 1 — Build the persona from all stored data
-# ─────────────────────────────────────────────
-def build_persona(user_id: int) -> str:
+# ── Build persona from knowledge graph + RAG ──────────────
+def build_persona(user_id: int, question: str = "") -> str:
     db = SessionLocal()
     try:
-        # top 15 entities by frequency
+        # top 15 knowledge entities
         entities = (
             db.query(KnowledgeEntity)
             .filter(KnowledgeEntity.user_id == user_id)
@@ -34,17 +30,33 @@ def build_persona(user_id: int) -> str:
             .all()
         )
 
-        # last 15 journal entries
-        entries = (
-            db.query(JournalEntry)
-            .filter(JournalEntry.user_id == user_id)
-            .order_by(desc(JournalEntry.created_at))
-            .limit(15)
-            .all()
-        )
+        # entry count check
+        count = db.query(JournalEntry).filter(
+            JournalEntry.user_id == user_id
+        ).count()
 
-        if len(entries) < 5:
+        if count < 5:
             return None
+
+        # RAG — retrieve entries most relevant to this question
+        if question:
+            relevant_entries = retrieve_similar_entries(
+                user_id, question, k=6
+            )
+        else:
+            # fallback — recent entries
+            recent = (
+                db.query(JournalEntry)
+                .filter(JournalEntry.user_id == user_id)
+                .order_by(desc(JournalEntry.created_at))
+                .limit(10)
+                .all()
+            )
+            relevant_entries = "\n".join([
+                f"[{e.created_at.strftime('%d %b')}] "
+                f"Energy {e.energy_score}/10 | {e.content[:150]}..."
+                for e in recent
+            ])
 
         # format entities
         entity_text = "\n".join([
@@ -52,29 +64,26 @@ def build_persona(user_id: int) -> str:
             for e in entities
         ])
 
-        # format relationships as readable sentences
+        # format relationships
         rel_text = "\n".join([
             f"- {r.entity_from} {r.relation.replace('_', ' ')} "
             f"{r.entity_to} (confirmed {r.frequency} times)"
             for r in relationships
         ])
 
-        # format recent entries
-        entry_text = "\n".join([
-            f"[{e.created_at.strftime('%d %b')}] "
-            f"Energy {e.energy_score}/10 | "
-            f"Mood: {e.mood} | "
-            f"{e.content[:150]}..."
-            for e in entries
-        ])
-
-        # calculate stats
-        scores     = [e.energy_score for e in entries if e.energy_score]
+        # compute energy stats
+        entries_all = (
+            db.query(JournalEntry)
+            .filter(JournalEntry.user_id == user_id)
+            .order_by(desc(JournalEntry.created_at))
+            .limit(20)
+            .all()
+        )
+        scores     = [e.energy_score for e in entries_all if e.energy_score]
         avg_energy = round(sum(scores) / len(scores), 1) if scores else 5.0
         low_days   = len([s for s in scores if s <= 4])
         high_days  = len([s for s in scores if s >= 7])
 
-        # build the persona — this is the system prompt
         persona = f"""
 You are this person's Alter Ego — the most honest,
 self-aware version of them that exists.
@@ -94,9 +103,9 @@ HOW THINGS CONNECT IN THEIR LIFE:
 {rel_text}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RECENT JOURNAL ENTRIES:
+MOST RELEVANT PAST ENTRIES (retrieved via RAG):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-{entry_text}
+{relevant_entries}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ENERGY PATTERNS:
@@ -114,13 +123,13 @@ HOW TO SPEAK AS THIS PERSON:
   voice not a yes-man
 - Reference specific things from their data when relevant
 - If you see a pattern they are avoiding, gently name it
-- If asked something you don't have enough data for, 
+- If asked something you don't have enough data for,
   say "I'm not sure — I haven't written about this enough"
 - Never give generic advice — always ground in their data
-- You are NOT an AI assistant — you are their most 
+- You are NOT an AI assistant — you are their most
   self-aware inner voice
 
-IMPORTANT: If the relationship data shows a chain 
+IMPORTANT: If the relationship data shows a chain
 e.g. manager → causes → stress → leads_to → gym_skipped
 reason through that full chain in your answer.
 """
@@ -129,10 +138,7 @@ reason through that full chain in your answer.
     finally:
         db.close()
 
-
-# ─────────────────────────────────────────────
-# Step 2 — Load conversation history from DB
-# ─────────────────────────────────────────────
+# ── Load conversation history ─────────────────────────────
 def load_history(user_id: int, limit: int = 10) -> list:
     db = SessionLocal()
     try:
@@ -143,15 +149,11 @@ def load_history(user_id: int, limit: int = 10) -> list:
             .limit(limit)
             .all()
         )
-        # reverse to get chronological order
         return list(reversed(sessions))
     finally:
         db.close()
 
-
-# ─────────────────────────────────────────────
-# Step 3 — Save message to DB
-# ─────────────────────────────────────────────
+# ── Save message ──────────────────────────────────────────
 def save_message(user_id: int, role: str, content: str):
     db = SessionLocal()
     try:
@@ -166,52 +168,73 @@ def save_message(user_id: int, role: str, content: str):
     finally:
         db.close()
 
-
-# ─────────────────────────────────────────────
-# Step 4 — Main chat function
-# ─────────────────────────────────────────────
+# ── Main chat function ────────────────────────────────────
 def chat_with_alter_ego(user_id: int, message: str) -> dict:
+    db = SessionLocal()
+    try:
+        entry_count = db.query(JournalEntry).filter(
+            JournalEntry.user_id == user_id
+        ).count()
+    finally:
+        db.close()
 
-    # check if enough data exists
-    persona = build_persona(user_id)
+    # scenario 1 — brand new user
+    if entry_count == 0:
+        return {
+            "ready":    False,
+            "scenario": "new_user",
+            "message":  "Your Alter Ego hasn't been born yet. "
+                        "Write your first journal entry and "
+                        "I'll start learning who you are.",
+            "progress": 0,
+            "required": 5
+        }
+
+    # scenario 2 — not enough entries
+    if entry_count < 5:
+        return {
+            "ready":    False,
+            "scenario": "building",
+            "message":  f"Your Alter Ego is still forming. "
+                        f"I've read {entry_count} of your entries. "
+                        f"Write {5 - entry_count} more and I'll have "
+                        f"enough to truly speak as you.",
+            "progress": entry_count,
+            "required": 5
+        }
+
+    # scenario 3 — build persona using RAG with current question
+    persona = build_persona(user_id, question=message)
     if not persona:
         return {
             "ready":   False,
-            "message": "Write at least 5 journal entries to unlock your Alter Ego"
+            "message": "Not enough data yet. Keep journaling."
         }
 
-    # load past conversation history from DB
-    history = load_history(user_id)
-
-    # build message list for LLM
+    history  = load_history(user_id)
     messages = [SystemMessage(content=persona)]
 
-    # add conversation history
     for h in history:
         if h.role == "user":
             messages.append(HumanMessage(content=h.content))
         else:
             messages.append(AIMessage(content=h.content))
 
-    # add current message
     messages.append(HumanMessage(content=message))
 
-    # get response
     response = llm.invoke(messages)
 
-    # save both messages to DB for next session
     save_message(user_id, "user",      message)
     save_message(user_id, "assistant", response.content)
 
     return {
-        "ready":    True,
-        "response": response.content
+        "ready":       True,
+        "scenario":    "active",
+        "response":    response.content,
+        "entry_count": entry_count
     }
 
-
-# ─────────────────────────────────────────────
-# Step 5 — Clear conversation history
-# ─────────────────────────────────────────────
+# ── Clear history ─────────────────────────────────────────
 def clear_alter_ego_history(user_id: int):
     db = SessionLocal()
     try:

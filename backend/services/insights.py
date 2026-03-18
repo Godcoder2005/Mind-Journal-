@@ -3,47 +3,22 @@ from utils.state import MindJournal
 from pydantic import BaseModel
 from db.database import SessionLocal
 from db.models import JournalEntry, Insight
+from services.rag import hybrid_fetch
 from sqlalchemy import desc
+from datetime import datetime
 
-# pydantic class for structured output
+# ── Pydantic schema ───────────────────────────────────────
 class InsightStructure(BaseModel):
     reflection:     str
     nudge:          str
     pattern_notice: str
     affirmation:    str
 
-# llm model
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.4)
+# ── LLM setup ─────────────────────────────────────────────
+llm            = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.4)
 structured_llm = llm.with_structured_output(InsightStructure)
 
-# function to fetch past entries
-def fetch_past_entries(user_id: int, limit: int = 5):
-    db = SessionLocal()
-    try:
-        entries = (
-            db.query(JournalEntry)
-            .filter(JournalEntry.user_id == user_id)
-            .order_by(desc(JournalEntry.created_at))
-            .limit(limit)
-            .all()
-        )
-
-        if not entries:
-            return "", True 
-
-        past = []
-        for e in entries:
-            themes = e.themes if e.themes else "none"
-            past.append(
-                f"- [{e.created_at.strftime('%d %b')}] "
-                f"Mood: {e.primary_emotion} | Energy: {e.energy_score}/10 | "
-                f"Themes: {themes} | Entry: {e.content[:100]}..."
-            )
-        return "\n".join(past), False   # ← returning tuple here too
-
-    finally:
-        db.close()
-
+# ── Main insight generation node ──────────────────────────
 def Insight_generation(state: MindJournal) -> MindJournal:
     query             = state['query']
     user_id           = state['user_id']
@@ -53,8 +28,10 @@ def Insight_generation(state: MindJournal) -> MindJournal:
     sentiment         = state['sentiment_result']
     patterns          = state['pattern_result']
 
-    past_entries, is_first_time = fetch_past_entries(user_id)
+    # hybrid fetch — RAG + SQL
+    past_entries, is_first_time = hybrid_fetch(user_id, query)
 
+    # two different prompts based on user history
     if is_first_time:
         prompt = f"""
 You are Mind Mirror — a warm, emotionally intelligent journaling companion.
@@ -102,35 +79,41 @@ WHAT YOU KNOW FROM ANALYSIS:
 - Cognitive distortions: {sentiment['cognitive_distortions']}
 - Recurring themes: {patterns['recurring_themes']}
 - Goals mentioned: {patterns['goals_mentioned']}
-- Goal drift: {patterns['goal_drift']}
+- Goal drift detected: {patterns['goal_drift']}
 - People mentioned: {patterns['people_mentioned']}
 
-THIS PERSON'S RECENT JOURNAL HISTORY:
+RELEVANT PAST ENTRIES (retrieved via hybrid RAG):
 {past_entries}
 
-Write a deeply personal response using BOTH today's entry AND their history.
+Write a deeply personal response using BOTH today's entry AND past history.
+The past entries above were retrieved semantically — they are the most relevant
+to what this person is feeling right now, not just the most recent.
+If you see a pattern across entries, call it out gently.
+If they have improved since a similar past entry, acknowledge it specifically.
 
 Rules:
 - reflection: 2-3 warm sentences showing you understood today AND their journey
 - nudge: one small kind actionable suggestion — not preachy
-- pattern_notice: one honest observation across current + past entries
+- pattern_notice: one honest observation using today + past entries
 - affirmation: one specific affirmation based on what they wrote today
 
 STRICT RULES:
 - Never be generic — reference specifics from their entries
 - Speak like a wise caring friend not a therapist
 - If urgency is high — lead with warmth and safety first
+- The past entries give you CONTEXT — use them to make insights richer
 """
 
     response = structured_llm.invoke(prompt)
 
-    # save to DB BEFORE returning
+    # save insight to DB
     db = SessionLocal()
     try:
         insight = Insight(
-            user_id = user_id,
-            content = response.reflection,
-            type    = "reflection"
+            user_id    = user_id,
+            content    = response.reflection,
+            type       = "daily",
+            created_at = datetime.now()
         )
         db.add(insight)
         db.commit()
@@ -139,8 +122,6 @@ STRICT RULES:
         print(f"Insight save failed: {e}")
     finally:
         db.close()
-
-    # return AFTER saving
 
     return {
         **state,

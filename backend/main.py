@@ -18,6 +18,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+from services.scheduler import start_scheduler, stop_scheduler
+
+@app.on_event("startup")
+def startup():
+    start_scheduler()
+
+@app.on_event("shutdown")
+def shutdown():
+    stop_scheduler()
+
 app.include_router(energy.router, prefix="/energy", tags=["energy"])
 app.include_router(auth.router,     prefix="/auth",     tags=["auth"])
 app.include_router(journal.router,  prefix="/journal",  tags=["journal"])

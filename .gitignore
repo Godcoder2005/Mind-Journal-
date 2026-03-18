@@ -1,53 +1,31 @@
-# ------------------------
-# Python
-# ------------------------
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+# ── Python / Backend ──────────────────────────────────────
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/**/*.pyo
+backend/.env
+backend/mind_mirror.db
+backend/faiss_index_*/
+backend/*.db
+backend/test.py
+backend/test_db.py
 
-# ------------------------
-# Virtual Environment
-# ------------------------
-venv/
-env/
-.venv/
+# ── Node / Frontend ───────────────────────────────────────
+node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/.env.production
 
-# ------------------------
-# Environment Variables (IMPORTANT)
-# ------------------------
-.env
-
-# ------------------------
-# Database Files
-# ------------------------
-*.db
-*.sqlite3
-
-# ------------------------
-# Logs
-# ------------------------
-*.log
-
-# ------------------------
-# Jupyter Notebook checkpoints
-# ------------------------
-.ipynb_checkpoints/
-
-# ------------------------
-# VS Code / IDE
-# ------------------------
+# ── IDE / System ──────────────────────────────────────────
 .vscode/
 .idea/
-
-# ------------------------
-# OS Files
-# ------------------------
-.DS_Store
+*.DS_Store
 Thumbs.db
+*.log
 
-# ------------------------
-# Temporary files
-# ------------------------
-*.tmp
-*.swp
+# ── Sensitive ─────────────────────────────────────────────
+*.env
+*.env.*
+!*.env.example
