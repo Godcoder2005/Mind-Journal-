@@ -7,9 +7,7 @@ from sqlalchemy import desc
 import os
 
 # ── Setup ─────────────────────────────────────────────────
-embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-FAISS_BASE = "faiss_index"
-
+embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
 # ── Add entry to FAISS after saving ──────────────────────
 def add_entry_to_faiss(user_id: int, entry_id: int, content: str):
     try:
