@@ -2,7 +2,8 @@ from typing import TypedDict, Optional
 
 class MindJournal(TypedDict):
     query:             str
-    user_id:           int        # ← must be here
+    user_id:           int    
+    stage:             str    
     orchestration:     Optional[dict]
     sentiment_result:  Optional[dict]
     pattern_result:    Optional[dict]

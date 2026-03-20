@@ -5,6 +5,10 @@ from services.rag import add_entry_to_faiss
 from datetime import datetime
 
 def Memory_save(state: MindJournal) -> MindJournal:
+    # ── skip DB insert for anonymous users ────────────────
+    if state.get('stage') == 'anonymous':
+        return state
+    # ── existing logic unchanged below ───────────────────
     db = SessionLocal()
     try:
         query     = state['query']

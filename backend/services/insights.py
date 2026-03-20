@@ -7,31 +7,32 @@ from services.rag import hybrid_fetch
 from sqlalchemy import desc
 from datetime import datetime
 
-# ── Pydantic schema ───────────────────────────────────────
 class InsightStructure(BaseModel):
     reflection:     str
     nudge:          str
     pattern_notice: str
     affirmation:    str
 
-# ── LLM setup ─────────────────────────────────────────────
 llm            = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.4)
 structured_llm = llm.with_structured_output(InsightStructure)
 
-# ── Main insight generation node ──────────────────────────
 def Insight_generation(state: MindJournal) -> MindJournal:
     query             = state['query']
     user_id           = state['user_id']
+    stage             = state.get('stage', 'mature_user')
     context           = state['orchestration']['context_for_tools']
     emotional_summary = state['orchestration']['emotional_summary']
     urgency           = state['orchestration']['urgency']
     sentiment         = state['sentiment_result']
     patterns          = state['pattern_result']
 
-    # hybrid fetch — RAG + SQL
-    past_entries, is_first_time = hybrid_fetch(user_id, query)
+    # ── stage gate — decide fetch strategy ───────────────
+    if stage in ('anonymous', 'first_entry'):
+        is_first_time = True
+        past_entries  = ""
+    else:
+        past_entries, is_first_time = hybrid_fetch(user_id, query)
 
-    # two different prompts based on user history
     if is_first_time:
         prompt = f"""
 You are Mind Mirror — a warm, emotionally intelligent journaling companion.
@@ -58,6 +59,7 @@ Rules:
 - affirmation: make them feel genuinely welcomed and understood
 
 STRICT RULES:
+- Never use "you often", "you usually", "you tend to" — no history exists yet
 - Never mention this is their first entry in a clinical way
 - Do NOT say "Welcome to Mind Mirror" — too robotic
 - Speak like a wise friend who is genuinely happy they opened up
@@ -101,27 +103,27 @@ STRICT RULES:
 - Never be generic — reference specifics from their entries
 - Speak like a wise caring friend not a therapist
 - If urgency is high — lead with warmth and safety first
-- The past entries give you CONTEXT — use them to make insights richer
 """
 
     response = structured_llm.invoke(prompt)
 
-    # save insight to DB
-    db = SessionLocal()
-    try:
-        insight = Insight(
-            user_id    = user_id,
-            content    = response.reflection,
-            type       = "daily",
-            created_at = datetime.now()
-        )
-        db.add(insight)
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        print(f"Insight save failed: {e}")
-    finally:
-        db.close()
+    # ── save to DB only for logged in users ──────────────
+    if user_id is not None:
+        db = SessionLocal()
+        try:
+            insight = Insight(
+                user_id    = user_id,
+                content    = response.reflection,
+                type       = "daily",
+                created_at = datetime.now()
+            )
+            db.add(insight)
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            print(f"Insight save failed: {e}")
+        finally:
+            db.close()
 
     return {
         **state,

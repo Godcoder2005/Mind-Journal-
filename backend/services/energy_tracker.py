@@ -199,6 +199,10 @@ def _calculate_recovery(scores: list, entries: list) -> str:
 # Feature 1 — Energy DNA
 # ─────────────────────────────────────────────
 def generate_energy_dna(user_id: int) -> dict:
+    # ── skip for insufficient data ────────────────────────
+    if stage in ('anonymous', 'first_entry'):
+        return {"ready": False, "message": "Not enough data yet"}
+    # ── existing logic unchanged below ───────────────────
     data = fetch_energy_data(user_id)
 
     if not data["has_enough_data"]:
@@ -270,6 +274,10 @@ STRICT RULES:
 # Feature 2 — Energy Weather Forecast
 # ─────────────────────────────────────────────
 def generate_energy_forecast(user_id: int) -> dict:
+    # ── skip for insufficient data ────────────────────────
+    if stage in ('anonymous', 'first_entry'):
+        return {"ready": False, "message": "Not enough data yet"}
+    # ── existing logic unchanged below ───────────────────
     data = fetch_energy_data(user_id, days_back=30)
 
     if not data["has_enough_data"]:
@@ -342,6 +350,10 @@ STRICT RULES:
 # Feature 3 — Energy Villain Detection
 # ─────────────────────────────────────────────
 def generate_energy_villain(user_id: int) -> dict:
+    # ── skip for insufficient data ────────────────────────
+    if stage in ('anonymous', 'first_entry'):
+        return {"ready": False, "message": "Not enough data yet"}
+    # ── existing logic unchanged below ───────────────────
     data = fetch_energy_data(user_id, days_back=30)
 
     if not data["has_enough_data"]:
@@ -396,6 +408,10 @@ STRICT RULES:
 # Feature 4 — Golden Hours
 # ─────────────────────────────────────────────
 def generate_golden_hours(user_id: int) -> dict:
+    # ── skip for insufficient data ────────────────────────
+    if stage in ('anonymous', 'first_entry'):
+        return {"ready": False, "message": "Not enough data yet"}
+    # ── existing logic unchanged below ───────────────────
     data = fetch_energy_data(user_id, days_back=60)
 
     if not data["has_enough_data"]:
@@ -446,6 +462,10 @@ def generate_golden_hours(user_id: int) -> dict:
 # Feature 5 — Energy Streak
 # ─────────────────────────────────────────────
 def generate_energy_streak(user_id: int) -> dict:
+    # ── skip for insufficient data ────────────────────────
+    if stage in ('anonymous', 'first_entry'):
+        return {"ready": False, "message": "Not enough data yet"}
+    # ── existing logic unchanged below ───────────────────
     data    = fetch_energy_data(user_id, days_back=60)
     scores  = data["scores"]
     entries = data["all_entries"]

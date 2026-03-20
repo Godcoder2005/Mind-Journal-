@@ -15,6 +15,7 @@ export default function Sidebar() {
     const navigate = useNavigate()
     const location = useLocation()
     const username = localStorage.getItem('username') || 'You'
+    const token = localStorage.getItem('token')    // ← add this line
 
     const logout = () => {
         localStorage.clear()
@@ -29,7 +30,7 @@ export default function Sidebar() {
             display: 'flex', flexDirection: 'column',
             padding: '24px 0'
         }}>
-            {/* Logo */}
+            {/* Logo — unchanged */}
             <div style={{ padding: '0 20px 28px', borderBottom: '1px solid var(--border)', marginBottom: '16px' }}>
                 <div style={{ fontFamily: 'var(--font-serif)', fontSize: '20px', color: 'var(--purple3)' }}>
                     Mind Mirror
@@ -39,7 +40,7 @@ export default function Sidebar() {
                 </div>
             </div>
 
-            {/* Nav */}
+            {/* Nav — unchanged */}
             {NAV.map((item, i) => {
                 if (item.section) {
                     return (
@@ -72,32 +73,67 @@ export default function Sidebar() {
                 )
             })}
 
-            {/* User */}
+            {/* User — this section changes */}
             <div style={{
                 marginTop: 'auto', padding: '16px 20px',
                 borderTop: '1px solid var(--border)'
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                    <div style={{
-                        width: '32px', height: '32px', borderRadius: '50%',
-                        background: 'linear-gradient(135deg, var(--purple2), var(--purple))',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '12px', fontWeight: '500', color: 'white'
-                    }}>
-                        {username[0].toUpperCase()}
+                {token ? (
+                    // ── logged in — existing UI unchanged ────────────
+                    <>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                            <div style={{
+                                width: '32px', height: '32px', borderRadius: '50%',
+                                background: 'linear-gradient(135deg, var(--purple2), var(--purple))',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: '12px', fontWeight: '500', color: 'white'
+                            }}>
+                                {username[0].toUpperCase()}
+                            </div>
+                            <div>
+                                <div style={{ fontSize: '13px', color: 'var(--text2)' }}>{username}</div>
+                                <div style={{ fontSize: '10px', color: 'var(--text3)' }}>journaling daily</div>
+                            </div>
+                        </div>
+                        <div onClick={logout} style={{
+                            fontSize: '11px', color: 'var(--text3)',
+                            cursor: 'pointer', padding: '4px 0'
+                        }}>
+                            Sign out
+                        </div>
+                    </>
+                ) : (
+                    // ── not logged in — show auth links ───────────────
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{
+                            fontSize: '11px', color: 'var(--text3)',
+                            marginBottom: '4px', lineHeight: '1.5'
+                        }}>
+                            Save your entries
+                        </div>
+                        <div onClick={() => navigate('/login')} style={{
+                            fontSize: '12px', color: 'var(--purple3)',
+                            cursor: 'pointer', padding: '4px 0'
+                        }}>
+                            Sign in →
+                        </div>
+                        <div onClick={() => navigate('/signup')} style={{
+                            fontSize: '12px', color: 'var(--text3)',
+                            cursor: 'pointer', padding: '4px 0'
+                        }}>
+                            Create account
+                        </div>
                     </div>
-                    <div>
-                        <div style={{ fontSize: '13px', color: 'var(--text2)' }}>{username}</div>
-                        <div style={{ fontSize: '10px', color: 'var(--text3)' }}>journaling daily</div>
-                    </div>
-                </div>
-                <div onClick={logout} style={{
-                    fontSize: '11px', color: 'var(--text3)',
-                    cursor: 'pointer', padding: '4px 0'
-                }}>
-                    Sign out
-                </div>
+                )}
             </div>
         </div>
     )
 }
+// ```
+
+// Only two things changed vs your existing file:
+// ```
+// 1. const token = localStorage.getItem('token')  ← added line 5
+// 2. User section at bottom                        ← wrapped in token ? ... : ...
+//    logged in → exact same UI you had
+//    not logged in → sign in + create account links

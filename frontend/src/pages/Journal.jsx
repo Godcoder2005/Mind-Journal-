@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'          // ← add
 import { submitEntry } from '../api/client'
 
 export default function Journal() {
@@ -7,6 +8,9 @@ export default function Journal() {
     const [insight, setInsight] = useState(null)
     const [error, setError] = useState('')
     const [words, setWords] = useState(0)
+
+    const navigate = useNavigate()                       // ← add
+    const token = localStorage.getItem('token')       // ← add
 
     const now = new Date()
     const dateStr = now.toLocaleDateString('en-US', {
@@ -27,7 +31,10 @@ export default function Journal() {
         setError('')
         setInsight(null)
         try {
-            const res = await submitEntry({ query: text })
+            // ── send with or without auth ─────────────── // ← change
+            const res = token
+                ? await submitEntry({ query: text })
+                : await submitEntry({ query: text, user_id: null })
             setInsight(res.data.insight)
         } catch (err) {
             setError(err.response?.data?.detail || 'Something went wrong')
@@ -39,7 +46,7 @@ export default function Journal() {
     return (
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
 
-            {/* Topbar */}
+            {/* Topbar — unchanged */}
             <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 padding: '16px 28px', borderBottom: '1px solid var(--border)',
@@ -53,17 +60,16 @@ export default function Journal() {
                 </div>
             </div>
 
-            {/* Content */}
+            {/* Content — unchanged */}
             <div style={{ flex: 1, overflow: 'auto', padding: '32px 28px', maxWidth: '720px', width: '100%', margin: '0 auto' }}>
 
-                {/* Not submitted yet — show editor */}
+                {/* Editor — unchanged */}
                 {!insight && (
                     <div style={{
                         background: 'var(--bg2)', border: '1px solid var(--border)',
                         borderRadius: '16px', display: 'flex', flexDirection: 'column',
                         overflow: 'hidden'
                     }}>
-                        {/* Editor header */}
                         <div style={{
                             padding: '20px 24px 16px', borderBottom: '1px solid var(--border)',
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between'
@@ -79,7 +85,6 @@ export default function Journal() {
                             </div>
                         </div>
 
-                        {/* Textarea */}
                         <textarea
                             value={text}
                             onChange={e => setText(e.target.value)}
@@ -93,7 +98,6 @@ export default function Journal() {
                             }}
                         />
 
-                        {/* Writing prompts */}
                         <div style={{ padding: '0 24px 16px' }}>
                             <div style={{ fontSize: '10px', color: 'var(--text3)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                                 Need a prompt?
@@ -119,7 +123,6 @@ export default function Journal() {
                             </div>
                         </div>
 
-                        {/* Footer */}
                         <div style={{
                             padding: '16px 24px', borderTop: '1px solid var(--border)',
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between'
@@ -137,7 +140,7 @@ export default function Journal() {
                     </div>
                 )}
 
-                {/* Loading */}
+                {/* Loading — unchanged */}
                 {loading && (
                     <div style={{ textAlign: 'center', padding: '60px 0' }}>
                         <div style={{
@@ -154,11 +157,11 @@ export default function Journal() {
                     </div>
                 )}
 
-                {/* Insight — only reflection + nudge shown */}
+                {/* Insight section */}
                 {insight && !loading && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-                        {/* Reflection */}
+                        {/* Reflection — unchanged */}
                         <div style={{
                             background: 'var(--bg2)', border: '1px solid var(--border)',
                             borderRadius: '16px', padding: '28px 32px'
@@ -172,14 +175,13 @@ export default function Journal() {
                             </div>
                             <div style={{
                                 fontFamily: 'var(--font-serif)', fontSize: '18px',
-                                color: 'var(--text)', lineHeight: '1.8',
-                                fontStyle: 'italic'
+                                color: 'var(--text)', lineHeight: '1.8', fontStyle: 'italic'
                             }}>
                                 "{insight.reflection}"
                             </div>
                         </div>
 
-                        {/* Nudge */}
+                        {/* Nudge — unchanged */}
                         <div style={{
                             background: 'rgba(138,110,255,0.06)',
                             border: '1px solid rgba(138,110,255,0.2)',
@@ -193,27 +195,64 @@ export default function Journal() {
                             }}>
                                 One thing for today
                             </div>
-                            <div style={{
-                                fontSize: '14px', color: 'var(--text2)', lineHeight: '1.7'
-                            }}>
+                            <div style={{ fontSize: '14px', color: 'var(--text2)', lineHeight: '1.7' }}>
                                 {insight.nudge}
                             </div>
                         </div>
 
-                        {/* Write again */}
-                        <button onClick={() => { setText(''); setInsight(null) }} style={{
-                            background: 'transparent',
-                            border: '1px solid var(--border2)',
-                            borderRadius: '10px', padding: '12px',
-                            color: 'var(--text3)', cursor: 'pointer',
-                            fontSize: '12px', fontFamily: 'var(--font-sans)',
-                            transition: 'all 0.15s', width: '100%'
-                        }}
-                            onMouseEnter={e => e.target.style.color = 'var(--text2)'}
-                            onMouseLeave={e => e.target.style.color = 'var(--text3)'}
-                        >
-                            Write another entry
-                        </button>
+                        {/* ── soft login prompt — only for anonymous ── // ← add */}
+                        {!token && (
+                            <div style={{
+                                background: 'var(--bg2)',
+                                border: '1px solid rgba(138,110,255,0.25)',
+                                borderRadius: '14px', padding: '20px 24px'
+                            }}>
+                                <div style={{
+                                    fontSize: '13px', color: 'var(--text2)',
+                                    lineHeight: '1.7', marginBottom: '14px',
+                                    fontStyle: 'italic'
+                                }}>
+                                    This is just from one entry. Over time, we can detect deeper patterns — your energy cycles, recurring themes, what drains you, what lifts you.
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <button
+                                        className="btn-primary"
+                                        onClick={() => navigate('/signup')}
+                                        style={{ width: '100%', padding: '11px' }}
+                                    >
+                                        Save my insights
+                                    </button>
+                                    <button
+                                        onClick={() => { setText(''); setInsight(null) }}
+                                        style={{
+                                            background: 'transparent', border: 'none',
+                                            color: 'var(--text3)', cursor: 'pointer',
+                                            fontSize: '12px', fontFamily: 'var(--font-sans)',
+                                            padding: '6px', width: '100%'
+                                        }}
+                                    >
+                                        Continue without saving
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Write again — unchanged */}
+                        {token && (
+                            <button onClick={() => { setText(''); setInsight(null) }} style={{
+                                background: 'transparent',
+                                border: '1px solid var(--border2)',
+                                borderRadius: '10px', padding: '12px',
+                                color: 'var(--text3)', cursor: 'pointer',
+                                fontSize: '12px', fontFamily: 'var(--font-sans)',
+                                transition: 'all 0.15s', width: '100%'
+                            }}
+                                onMouseEnter={e => e.target.style.color = 'var(--text2)'}
+                                onMouseLeave={e => e.target.style.color = 'var(--text3)'}
+                            >
+                                Write another entry
+                            </button>
+                        )}
 
                     </div>
                 )}
@@ -221,3 +260,13 @@ export default function Journal() {
         </div>
     )
 }
+// ```
+
+// Exactly 4 things changed vs your existing file:
+// ```
+// 1. useNavigate imported          ← line 2
+// 2. navigate + token defined      ← inside component
+// 3. handleSubmit checks token     ← sends user_id: null if no token
+// 4. After insight:
+//    - anonymous → soft login prompt + continue button
+//    - logged in → existing "Write another entry" button

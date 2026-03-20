@@ -14,6 +14,7 @@ api.interceptors.request.use(config => {
 // add this line to api/client.js
 export const getAllLetters = () => api.get('/insights/future-letter/all')
 
+
 // auth
 export const signup = (data) => api.post('/auth/signup', data)
 export const login = (data) => api.post('/auth/login', data)
