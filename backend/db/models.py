@@ -7,6 +7,8 @@ class User(Base):
     id         = Column(Integer, primary_key=True, index=True)
     email      = Column(String, unique=True, index=True, nullable=False)
     username   = Column(String, unique=True, nullable=False)
+    xp         = Column(Integer, default=0)        # ← add
+    level      = Column(Integer, default=1)  
     password   = Column(String, nullable=False)   # hashed password
     created_at = Column(DateTime, server_default=func.now())
 
@@ -125,3 +127,11 @@ class NightlyCheckin(Base):
     tomorrow_intention = Column(Text, nullable=True)
     day_of_week        = Column(Integer, nullable=True)
     created_at         = Column(DateTime, server_default=func.now())
+
+class XPLog(Base):
+    __tablename__ = "xp_logs"
+    id         = Column(Integer, primary_key=True)
+    user_id    = Column(Integer, ForeignKey("users.id"))
+    action     = Column(String)    # e.g. "journal_entry"
+    xp_earned  = Column(Integer)
+    created_at = Column(DateTime, server_default=func.now())

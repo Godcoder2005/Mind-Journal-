@@ -9,7 +9,7 @@ import statistics
 # ─────────────────────────────────────────────
 # LLM Setup
 # ─────────────────────────────────────────────
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.3)
+llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite-preview", temperature=0.3)
 
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
@@ -532,7 +532,7 @@ def generate_energy_streak(user_id: int) -> dict:
 # ─────────────────────────────────────────────
 # Master function — returns all 5 features at once
 # ─────────────────────────────────────────────
-def get_full_energy_tracker(user_id: int) -> dict:
+def get_full_energy_tracker(user_id: int, stage: str = "mature_user") -> dict:
     data = fetch_energy_data(user_id)
 
     return {

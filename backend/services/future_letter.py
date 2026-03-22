@@ -8,7 +8,7 @@ from db.models import (
 from sqlalchemy import desc
 from datetime import datetime, timedelta
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.8)
+llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite-preview", temperature=0.8)
 
 class LetterOutput(BaseModel):
     subject:     str   # letter subject line e.g. "I remember this month"

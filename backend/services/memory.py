@@ -3,6 +3,7 @@ from db.models import JournalEntry
 from utils.state import MindJournal
 from services.rag import add_entry_to_faiss
 from datetime import datetime
+from services.gamification import award_xp
 
 def Memory_save(state: MindJournal) -> MindJournal:
     # ── skip DB insert for anonymous users ────────────────
@@ -36,6 +37,7 @@ def Memory_save(state: MindJournal) -> MindJournal:
         db.add(entry)
         db.commit()
         db.refresh(entry)
+        award_xp(user_id, "journal_entry")
 
         # add to FAISS vector store after saving to SQL
         add_entry_to_faiss(

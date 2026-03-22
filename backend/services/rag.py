@@ -8,7 +8,9 @@ import os
 
 # ── Setup ─────────────────────────────────────────────────
 embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
-# ── Add entry to FAISS after saving ──────────────────────
+FAISS_BASE = "faiss_index"
+
+# ── Add entry to FAISS after saving ──────────────────────# ── Add entry to FAISS after saving ──────────────────────
 def add_entry_to_faiss(user_id: int, entry_id: int, content: str):
     try:
         doc = Document(

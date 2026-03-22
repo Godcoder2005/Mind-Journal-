@@ -19,7 +19,19 @@ def migrate():
             "word_count":       "INTEGER",
             "hour_of_day":      "INTEGER",
             "day_of_week":      "INTEGER",
+            "xp":               "INTEGER DEFAULT 0",
+            "level":            "INTEGER DEFAULT 1",
         }
+
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS xp_logs (
+                id INTEGER PRIMARY KEY,
+                user_id INTEGER,
+                action VARCHAR,
+                xp_earned INTEGER,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
 
         for column_name, column_type in columns_to_add.items():
             if column_name not in existing_columns:

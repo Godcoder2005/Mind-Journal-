@@ -4,8 +4,9 @@ from db.database import SessionLocal
 from db.models import NightlyCheckin, KnowledgeEntity, KnowledgeRelationship
 from sqlalchemy import desc
 from datetime import datetime, timedelta
+from services.gamification import award_xp
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.3)
+llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite-preview", temperature=0.3)
 
 # ── Pydantic schema ───────────────────────────────────────
 class CheckinAnalysis(BaseModel):
@@ -199,6 +200,7 @@ STRICT RULES:
             )
 
         db.commit()
+        award_xp(user_id, "nightly_checkin")
 
         return {
             "saved":            True,

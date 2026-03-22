@@ -16,7 +16,7 @@ from utils.state import MindJournal
 load_dotenv()
 
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite-preview")
 
 def Agent_Planning(state : MindJournal)-> MindJournal:
     query = state['query']

@@ -9,7 +9,9 @@ from services.nightly_checkin import (
 )
 from pydantic import BaseModel
 from db.models import User
-
+from services.gamification import get_user_stats
+from services.onboarding import analyze_onboarding_answers
+from db.database import get_db
 
 router = APIRouter()
 
@@ -52,3 +54,11 @@ def weekly_report(current_user: User = Depends(get_current_user)):
 @router.get("/checkin/history")
 def checkin_history(current_user: User = Depends(get_current_user)):
     return get_checkin_history(current_user.id)
+
+@router.get("/stats")
+def user_stats(current_user: User = Depends(get_current_user)):
+    return get_user_stats(current_user.id)
+
+@router.get("/onboarding-profile")
+def onboarding_profile(current_user: User = Depends(get_current_user)):
+    return analyze_onboarding_answers(current_user.id)

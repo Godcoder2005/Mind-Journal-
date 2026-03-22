@@ -4,7 +4,7 @@ from db.database import SessionLocal
 from db.models import (OnboardingAnswer, OnboardingComplete,KnowledgeEntity, KnowledgeRelationship)
 from datetime import datetime
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.2)
+llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite-preview", temperature=0.2)
 
 # ── Pydantic schemas ──────────────────────────────────────
 class Relationship(BaseModel):
@@ -186,5 +186,72 @@ STRICT RULES:
         db.rollback()
         print(f"Onboarding failed: {e}")
         return {"saved": False, "error": str(e)}
+    finally:
+        db.close()
+        \
+# ── Day 1 Profile from onboarding answers ─────────────────
+class Day1Profile(BaseModel):
+    baseline_energy:  float   # 1-10 predicted energy from Q4+Q5
+    energy_drainer:   str     # main thing draining energy (Q4)
+    key_person:       str     # person affecting mood most (Q3)
+    primary_goal:     str     # goal they keep coming back to (Q2)
+    top_of_mind:      str     # what's consistently on mind (Q1)
+    good_day_looks_like: str  # from Q5
+    bad_day_looks_like:  str  # from Q5
+    emotional_tone:   str     # positive | negative | neutral | mixed
+    one_line_summary: str     # one sentence about this person
+
+profile_llm = llm.with_structured_output(Day1Profile)
+
+def analyze_onboarding_answers(user_id: int) -> dict:
+    db = SessionLocal()
+    try:
+        answers = (
+            db.query(OnboardingAnswer)
+            .filter(OnboardingAnswer.user_id == user_id)
+            .order_by(OnboardingAnswer.id.asc())
+            .all()
+        )
+
+        if not answers:
+            return {"ready": False, "message": "No onboarding answers found"}
+
+        qa_text = "\n".join([
+            f"Q: {a.question}\nA: {a.answer}"
+            for a in answers
+        ])
+
+        prompt = f"""
+You are analyzing a person's onboarding answers for a journaling app.
+Extract a Day 1 psychological profile from these answers.
+
+{qa_text}
+
+For baseline_energy: estimate their typical daily energy on a 1-10 scale.
+- If they describe draining days, overwhelming stress → 3-5
+- If they describe manageable stress, some good days → 5-7
+- If they describe mostly good days, clear goals → 7-9
+
+Be specific and personal — use their exact words where possible.
+one_line_summary should feel like you truly understand them.
+"""
+        profile = profile_llm.invoke(prompt)
+
+        return {
+            "ready":              True,
+            "baseline_energy":    profile.baseline_energy,
+            "energy_drainer":     profile.energy_drainer,
+            "key_person":         profile.key_person,
+            "primary_goal":       profile.primary_goal,
+            "top_of_mind":        profile.top_of_mind,
+            "good_day_looks_like": profile.good_day_looks_like,
+            "bad_day_looks_like":  profile.bad_day_looks_like,
+            "emotional_tone":     profile.emotional_tone,
+            "one_line_summary":   profile.one_line_summary
+        }
+
+    except Exception as e:
+        print(f"Day1Profile failed: {e}")
+        return {"ready": False, "message": str(e)}
     finally:
         db.close()

@@ -4,7 +4,7 @@ from db.database import SessionLocal
 from db.models import KnowledgeEntity, KnowledgeRelationship
 from utils.state import MindJournal
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.2)
+llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite-preview", temperature=0.2)
 
 # ── Pydantic schemas ──────────────────────────────────────
 class Relationship(BaseModel):

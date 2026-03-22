@@ -11,7 +11,7 @@ class sentiment_structure(BaseModel):
     sentiment_score: float = Field(ge=-1.0, le=1.0)
 
 # Calling the llm
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash",temperature=0)
+llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite-preview",temperature=0)
 
 
 # llms structured output using pydantic

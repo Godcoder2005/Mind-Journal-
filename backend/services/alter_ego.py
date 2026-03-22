@@ -5,8 +5,9 @@ from db.models import JournalEntry, KnowledgeEntity, KnowledgeRelationship, Alte
 from services.rag import retrieve_similar_entries
 from sqlalchemy import desc
 from datetime import datetime
+from services.gamification import award_xp
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.7)
+llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite-preview", temperature=0.7)
 
 # ── Build persona from knowledge graph + RAG ──────────────
 def build_persona(user_id: int, question: str = "") -> str:
@@ -224,8 +225,19 @@ def chat_with_alter_ego(user_id: int, message: str) -> dict:
 
     response = llm.invoke(messages)
 
+    if isinstance(response.content, list):
+        response_text = "".join(
+            block["text"] if isinstance(block, dict) else block.text
+            for block in response.content
+            if (isinstance(block, dict) and block.get("type") == "text")
+            or (hasattr(block, "type") and block.type == "text")
+        )
+    else:
+        response_text = response.content
+    
     save_message(user_id, "user",      message)
     save_message(user_id, "assistant", response.content)
+    award_xp(user_id, "alter_ego_chat")
 
     return {
         "ready":       True,
