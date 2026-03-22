@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { signup } from '../api/client'
+import { signup, getOnboardingStatus } from '../api/client'
 
 export default function Signup() {
     const navigate = useNavigate()
@@ -20,7 +20,14 @@ export default function Signup() {
             localStorage.setItem('token', res.data.token)
             localStorage.setItem('username', res.data.username)
             localStorage.setItem('user_id', res.data.user_id)
-            navigate('/journal')
+
+            // ← check onboarding before redirecting
+            const onboarding = await getOnboardingStatus()
+            if (!onboarding.data.complete) {
+                navigate('/onboarding')
+            } else {
+                navigate('/journal')
+            }
         } catch (err) {
             setError(err.response?.data?.detail || 'Signup failed')
         } finally {

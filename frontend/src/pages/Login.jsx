@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { login } from '../api/client'
+import { login, getOnboardingStatus } from '../api/client'
 
 export default function Login() {
     const navigate = useNavigate()
@@ -20,7 +20,12 @@ export default function Login() {
             localStorage.setItem('token', res.data.token)
             localStorage.setItem('username', res.data.username)
             localStorage.setItem('user_id', res.data.user_id)
-            navigate('/journal')
+            const onboarding = await getOnboardingStatus()
+            if (!onboarding.data.complete) {
+                navigate('/onboarding')
+            } else {
+                navigate('/journal')
+            }
         } catch (err) {
             setError(err.response?.data?.detail || 'Login failed')
         } finally {
@@ -80,27 +85,28 @@ export default function Login() {
                     )}
 
                     {/* Email */}
-                    <div style={{ marginBottom: '16px' }}>
-                        <label className="label">Email</label>
-                        <input
-                            className="input"
-                            type="email"
-                            placeholder="you@gmail.com"
-                            value={form.email}
-                            onChange={e => setForm({ ...form, email: e.target.value })}
-                            onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                        />
-                    </div>
+                    <input
+                        className="input"
+                        type="email"
+                        name="email"
+                        autoComplete="email"
+                        placeholder="you@gmail.com"
+                        value={form.email}
+                        onChange={e => setForm({ ...form, email: e.target.value })}
+                        onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+                    />
 
                     {/* Password */}
                     <div style={{ marginBottom: '24px' }}>
                         <label className="label">Password</label>
                         <input
                             className="input"
-                            type="password"
-                            placeholder="••••••••"
-                            value={form.password}
-                            onChange={e => setForm({ ...form, password: e.target.value })}
+                            type="email"
+                            name="email"
+                            autoComplete="email"
+                            placeholder="you@gmail.com"
+                            value={form.email}
+                            onChange={e => setForm({ ...form, email: e.target.value })}
                             onKeyDown={e => e.key === 'Enter' && handleSubmit()}
                         />
                     </div>

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const NAV = [
@@ -9,13 +10,25 @@ const NAV = [
     { path: '/alter-ego', icon: '◎', label: 'Alter ego' },
     { path: '/checkin', icon: '◇', label: 'Nightly checkin' },
     { path: '/letter', icon: '❋', label: 'Future letter' },
+    { path: '/progress', icon: '◆', label: 'Progress' },
 ]
 
 export default function Sidebar() {
     const navigate = useNavigate()
     const location = useLocation()
     const username = localStorage.getItem('username') || 'You'
-    const token = localStorage.getItem('token')    // ← add this line
+    const token = localStorage.getItem('token')
+    const [stats, setStats] = useState(null)    // ← add
+
+    // fetch stats for XP + streak display
+    useEffect(() => {                            // ← add
+        if (!token) return
+        import('../api/client').then(({ getUserStats }) => {
+            getUserStats()
+                .then(res => setStats(res.data))
+                .catch(() => { })
+        })
+    }, [token])
 
     const logout = () => {
         localStorage.clear()
@@ -73,14 +86,41 @@ export default function Sidebar() {
                 )
             })}
 
-            {/* User — this section changes */}
+            {/* User section */}
             <div style={{
                 marginTop: 'auto', padding: '16px 20px',
                 borderTop: '1px solid var(--border)'
             }}>
                 {token ? (
-                    // ── logged in — existing UI unchanged ────────────
                     <>
+                        {/* streak + XP pills — only if stats loaded */}
+                        {stats && (
+                            <div style={{ marginBottom: '10px' }}>
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', gap: '6px',
+                                    padding: '5px 10px',
+                                    background: 'rgba(251,191,36,0.1)',
+                                    border: '1px solid rgba(251,191,36,0.2)',
+                                    borderRadius: '8px', marginBottom: '6px',
+                                    fontSize: '11px', color: 'var(--amber)', fontWeight: '500'
+                                }}>
+                                    🔥 {stats.streak} day streak
+                                </div>
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', gap: '5px',
+                                    padding: '4px 10px',
+                                    background: 'rgba(74,222,128,0.1)',
+                                    border: '1px solid rgba(74,222,128,0.2)',
+                                    borderRadius: '20px',
+                                    fontSize: '11px', color: 'var(--green)',
+                                    fontFamily: 'var(--font-mono)'
+                                }}>
+                                    ⚡ {stats.level_info?.xp} XP
+                                </div>
+                            </div>
+                        )}
+
+                        {/* user info */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                             <div style={{
                                 width: '32px', height: '32px', borderRadius: '50%',
@@ -92,7 +132,9 @@ export default function Sidebar() {
                             </div>
                             <div>
                                 <div style={{ fontSize: '13px', color: 'var(--text2)' }}>{username}</div>
-                                <div style={{ fontSize: '10px', color: 'var(--text3)' }}>journaling daily</div>
+                                <div style={{ fontSize: '10px', color: 'var(--text3)' }}>
+                                    {stats ? `Level ${stats.level_info?.level} ${stats.level_info?.level_name}` : 'journaling daily'}
+                                </div>
                             </div>
                         </div>
                         <div onClick={logout} style={{
@@ -103,7 +145,6 @@ export default function Sidebar() {
                         </div>
                     </>
                 ) : (
-                    // ── not logged in — show auth links ───────────────
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <div style={{
                             fontSize: '11px', color: 'var(--text3)',
@@ -129,11 +170,3 @@ export default function Sidebar() {
         </div>
     )
 }
-// ```
-
-// Only two things changed vs your existing file:
-// ```
-// 1. const token = localStorage.getItem('token')  ← added line 5
-// 2. User section at bottom                        ← wrapped in token ? ... : ...
-//    logged in → exact same UI you had
-//    not logged in → sign in + create account links

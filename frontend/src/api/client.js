@@ -14,6 +14,7 @@ api.interceptors.request.use(config => {
 // add this line to api/client.js
 export const getAllLetters = () => api.get('/insights/future-letter/all')
 
+export const getUserStats = () => api.get('/insights/stats')
 
 // auth
 export const signup = (data) => api.post('/auth/signup', data)
@@ -26,6 +27,7 @@ export const submitOnboardingAnswer = (data) => api.post('/auth/onboarding/answe
 // journal
 export const submitEntry = (data) => api.post('/agent/chat', data)
 
+export const getOnboardingProfile = () => api.get('/insights/onboarding-profile')
 // insights
 export const getCheckinQuestions = () => api.get('/insights/checkin/questions')
 export const getCheckinStatus = () => api.get('/insights/checkin/status')

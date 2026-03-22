@@ -1,8 +1,54 @@
 import { useState, useEffect } from 'react'
 import {
     getEnergyDNA, getEnergyForecast,
-    getEnergyVillain, getGoldenHours, getEnergyStreak
+    getEnergyVillain, getGoldenHours, getEnergyStreak, getOnboardingProfile
 } from '../api/client'
+
+function Day1EnergyBaseline({ profile }) {
+    const energyColor = profile.baseline_energy >= 7 ? 'var(--green)'
+        : profile.baseline_energy >= 5 ? 'var(--purple3)'
+            : profile.baseline_energy >= 3.5 ? 'var(--amber)'
+                : 'var(--coral)'
+
+    return (
+        <div style={{
+            background: 'linear-gradient(135deg, rgba(107,79,255,0.15), rgba(138,110,255,0.04))',
+            border: '1px solid rgba(138,110,255,0.3)',
+            borderRadius: '16px', padding: '24px 28px', marginBottom: '16px'
+        }}>
+            <div style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text3)', marginBottom: '10px' }}>
+                Your energy DNA — Day 1 baseline
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '16px' }}>
+                <div style={{ fontFamily: 'var(--font-serif)', fontSize: '52px', color: energyColor, lineHeight: '1' }}>
+                    {profile.baseline_energy}
+                </div>
+                <div style={{ fontSize: '14px', color: 'var(--text3)' }}>/10 predicted baseline</div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', borderRadius: '10px', padding: '12px 14px' }}>
+                    <div style={{ fontSize: '9px', color: '#f87171', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '5px' }}>
+                        Known energy villain
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--text2)', lineHeight: '1.6' }}>
+                        {profile.energy_drainer}
+                    </div>
+                </div>
+                <div style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: '10px', padding: '12px 14px' }}>
+                    <div style={{ fontSize: '9px', color: '#4ade80', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '5px' }}>
+                        Good day looks like
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--text2)', lineHeight: '1.6' }}>
+                        {profile.good_day_looks_like}
+                    </div>
+                </div>
+            </div>
+            <div style={{ marginTop: '14px', fontSize: '11px', color: 'var(--text3)' }}>
+                Start journaling to build your real energy profile — this baseline will be replaced by your actual patterns.
+            </div>
+        </div>
+    )
+}
 
 export default function EnergyTracker() {
     const [dna, setDna] = useState(null)
