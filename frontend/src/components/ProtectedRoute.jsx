@@ -9,6 +9,7 @@ export default function ProtectedRoute({ children }) {
 
     useEffect(() => {
         if (!token) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setChecking(false)
             return
         }
@@ -24,23 +25,3 @@ export default function ProtectedRoute({ children }) {
     if (needsOnboarding) return <Navigate to="/onboarding" replace />
     return children
 }
-// ```
-
-// ---
-
-// Now the complete flow is:
-// ```
-// New user signs up
-//       ↓
-// Token saved to localStorage
-//       ↓
-// Check /auth/onboarding/status
-//       ↓
-// complete: false → redirect to /onboarding
-//       ↓
-// User answers 5 questions
-//       ↓
-// complete: true → redirect to /journal
-//       ↓
-// Knowledge graph pre-populated
-// Alter Ego has a head start

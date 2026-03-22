@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import {
     getEnergyDNA, getEnergyForecast,
-    getEnergyVillain, getGoldenHours, getEnergyStreak, getOnboardingProfile
+    getEnergyVillain, getGoldenHours, getEnergyStreak
 } from '../api/client'
+import Loader from '../components/Loader'
 
 function Day1EnergyBaseline({ profile }) {
     const energyColor = profile.baseline_energy >= 7 ? 'var(--green)'
@@ -103,19 +104,7 @@ export default function EnergyTracker() {
             <div style={{ flex: 1, overflow: 'auto', padding: '24px 28px' }}>
 
                 {loading && (
-                    <div style={{ textAlign: 'center', padding: '60px 0' }}>
-                        <div style={{
-                            width: '36px', height: '36px',
-                            border: '2px solid var(--border2)',
-                            borderTop: '2px solid var(--purple)',
-                            borderRadius: '50%', margin: '0 auto 16px',
-                            animation: 'spin 1s linear infinite'
-                        }} />
-                        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                        <div style={{ fontSize: '13px', color: 'var(--text3)' }}>
-                            Analyzing your energy patterns...
-                        </div>
-                    </div>
+                    <Loader text="Analyzing your energy patterns..." />
                 )}
 
                 {!loading && (

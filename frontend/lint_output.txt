@@ -1,0 +1,40 @@
+
+C:\Users\akull\OneDrive\Desktop\Mind journal\frontend\src\components\ProtectedRoute.jsx
+  12:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  10 |     useEffect(() => {
+  11 |         if (!token) {
+> 12 |             setChecking(false)
+     |             ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  13 |             return
+  14 |         }
+  15 |         getOnboardingStatus()  react-hooks/set-state-in-effect
+
+C:\Users\akull\OneDrive\Desktop\Mind journal\frontend\src\pages\AlterEgo.jsx
+   8:12  error  'status' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  52:18  error  'err' is defined but never used                                                         no-unused-vars
+
+C:\Users\akull\OneDrive\Desktop\Mind journal\frontend\src\pages\Dashboard.jsx
+  206:22  error  'err' is defined but never used  no-unused-vars
+  212:25  error  Empty block statement            no-empty
+
+C:\Users\akull\OneDrive\Desktop\Mind journal\frontend\src\pages\EnergyTracker.jsx
+  4:56  error  'getOnboardingProfile' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\akull\OneDrive\Desktop\Mind journal\frontend\src\pages\NightlyCheckin.jsx
+  262:56  error  'i' is defined but never used  no-unused-vars
+
+C:\Users\akull\OneDrive\Desktop\Mind journal\frontend\src\pages\Onboarding.jsx
+  30:38  warning  React Hook useEffect has a missing dependency: 'fetchNext'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\akull\OneDrive\Desktop\Mind journal\frontend\src\pages\Progress.jsx
+  19:29  error  Empty block statement  no-empty
+
+✖ 9 problems (8 errors, 1 warning)
+

@@ -19,6 +19,7 @@ export const getUserStats = () => api.get('/insights/stats')
 // auth
 export const signup = (data) => api.post('/auth/signup', data)
 export const login = (data) => api.post('/auth/login', data)
+export const googleAuth = (data) => api.post('/auth/google', data)
 
 // onboarding
 export const getOnboardingStatus = () => api.get('/auth/onboarding/status')

@@ -5,7 +5,7 @@ export default function AlterEgo() {
     const [messages, setMessages] = useState([])
     const [input, setInput] = useState('')
     const [loading, setLoading] = useState(false)
-    const [status, setStatus] = useState(null)
+    const [status, setStatus] = useState(null) // eslint-disable-line no-unused-vars
     const bottomRef = useRef(null)
 
     const username = localStorage.getItem('username') || 'You'
@@ -50,6 +50,7 @@ export default function AlterEgo() {
             }])
 
         } catch (err) {
+            console.error(err)
             setMessages(prev => [...prev, {
                 role: 'assistant',
                 content: 'Something went wrong. Try again.',

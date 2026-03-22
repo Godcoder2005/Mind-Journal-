@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getOnboardingStatus, submitOnboardingAnswer } from '../api/client'
+import Loader from '../components/Loader'
 
 const SARCASTIC_INTROS = [
     "So... you're a mystery. Even to yourself.",
@@ -26,6 +27,7 @@ export default function Onboarding() {
         SARCASTIC_INTROS[Math.floor(Math.random() * SARCASTIC_INTROS.length)]
     )
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { fetchNext() }, [])
 
     const fetchNext = async () => {
@@ -70,13 +72,7 @@ export default function Onboarding() {
             minHeight: '100vh', background: 'var(--bg)',
             display: 'flex', alignItems: 'center', justifyContent: 'center'
         }}>
-            <div style={{
-                width: '36px', height: '36px',
-                border: '2px solid var(--border2)',
-                borderTop: '2px solid var(--purple)',
-                borderRadius: '50%', animation: 'spin 1s linear infinite'
-            }} />
-            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+            <Loader text="Preparing questions..." />
         </div>
     )
 

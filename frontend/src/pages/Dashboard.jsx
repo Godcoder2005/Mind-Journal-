@@ -4,6 +4,7 @@ import {
     BarChart, Bar, XAxis, YAxis, Tooltip,
     ResponsiveContainer, Cell
 } from 'recharts'
+import Loader from '../components/Loader'
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
@@ -203,12 +204,13 @@ export default function Dashboard() {
                     if (p.data?.ready) setProfile(p.data)
                 }
             } catch (err) {
+                console.error("No entries found:", err)
                 // no entries yet — load profile
                 setNoEntries(true)
                 try {
                     const p = await getOnboardingProfile()
                     if (p.data?.ready) setProfile(p.data)
-                } catch { }
+                } catch { /* ignore */ }
             } finally {
                 setLoading(false)
             }
@@ -242,24 +244,11 @@ export default function Dashboard() {
             <div style={{ flex: 1, overflow: 'auto', padding: '24px 28px' }}>
 
                 {loading && (
-                    <div style={{ textAlign: 'center', padding: '60px 0' }}>
-                        <div style={{
-                            width: '36px', height: '36px',
-                            border: '2px solid var(--border2)',
-                            borderTop: '2px solid var(--purple)',
-                            borderRadius: '50%', margin: '0 auto 16px',
-                            animation: 'spin 1s linear infinite'
-                        }} />
-                        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                        <div style={{ fontSize: '13px', color: 'var(--text3)' }}>Loading your data...</div>
-                    </div>
+                    <Loader text="Analyzing Patterns" />
                 )}
 
                 {!loading && (
                     <>
-                        {profile && [dna, forecast, villain, golden, streak].every(x => !x?.ready) && (
-                            <Day1EnergyBaseline profile={profile} />
-                        )}
 
                         {/* Day 1 profile card — only when no entries */}
                         {noEntries && profile && <Day1ProfileCard profile={profile} />}

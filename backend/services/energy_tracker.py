@@ -198,7 +198,7 @@ def _calculate_recovery(scores: list, entries: list) -> str:
 # ─────────────────────────────────────────────
 # Feature 1 — Energy DNA
 # ─────────────────────────────────────────────
-def generate_energy_dna(user_id: int) -> dict:
+def generate_energy_dna(user_id: int, stage: str = "mature_user") -> dict:
     # ── skip for insufficient data ────────────────────────
     if stage in ('anonymous', 'first_entry'):
         return {"ready": False, "message": "Not enough data yet"}
@@ -273,7 +273,7 @@ STRICT RULES:
 # ─────────────────────────────────────────────
 # Feature 2 — Energy Weather Forecast
 # ─────────────────────────────────────────────
-def generate_energy_forecast(user_id: int) -> dict:
+def generate_energy_forecast(user_id: int, stage: str = "mature_user") -> dict:
     # ── skip for insufficient data ────────────────────────
     if stage in ('anonymous', 'first_entry'):
         return {"ready": False, "message": "Not enough data yet"}
@@ -349,7 +349,7 @@ STRICT RULES:
 # ─────────────────────────────────────────────
 # Feature 3 — Energy Villain Detection
 # ─────────────────────────────────────────────
-def generate_energy_villain(user_id: int) -> dict:
+def generate_energy_villain(user_id: int, stage: str = "mature_user") -> dict:
     # ── skip for insufficient data ────────────────────────
     if stage in ('anonymous', 'first_entry'):
         return {"ready": False, "message": "Not enough data yet"}
@@ -407,7 +407,7 @@ STRICT RULES:
 # ─────────────────────────────────────────────
 # Feature 4 — Golden Hours
 # ─────────────────────────────────────────────
-def generate_golden_hours(user_id: int) -> dict:
+def generate_golden_hours(user_id: int, stage: str = "mature_user") -> dict:
     # ── skip for insufficient data ────────────────────────
     if stage in ('anonymous', 'first_entry'):
         return {"ready": False, "message": "Not enough data yet"}
@@ -461,7 +461,7 @@ def generate_golden_hours(user_id: int) -> dict:
 # ─────────────────────────────────────────────
 # Feature 5 — Energy Streak
 # ─────────────────────────────────────────────
-def generate_energy_streak(user_id: int) -> dict:
+def generate_energy_streak(user_id: int, stage: str = "mature_user") -> dict:
     # ── skip for insufficient data ────────────────────────
     if stage in ('anonymous', 'first_entry'):
         return {"ready": False, "message": "Not enough data yet"}
@@ -536,11 +536,11 @@ def get_full_energy_tracker(user_id: int, stage: str = "mature_user") -> dict:
     data = fetch_energy_data(user_id)
 
     return {
-        "dna":      generate_energy_dna(user_id),
-        "forecast": generate_energy_forecast(user_id),
-        "villain":  generate_energy_villain(user_id),
-        "golden":   generate_golden_hours(user_id),
-        "streak":   generate_energy_streak(user_id),
+        "dna":      generate_energy_dna(user_id, stage),
+        "forecast": generate_energy_forecast(user_id, stage),
+        "villain":  generate_energy_villain(user_id, stage),
+        "golden":   generate_golden_hours(user_id, stage),
+        "streak":   generate_energy_streak(user_id, stage),
         "summary": {
             "total_entries": data["total_entries"],
             "peak_day":      data["peak_day"],

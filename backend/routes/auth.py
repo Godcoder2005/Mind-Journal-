@@ -13,6 +13,7 @@ from services.onboarding import (
     process_answer
 )
 import os
+import requests
 
 # ── setup ─────────────────────────────────────────────────
 router        = APIRouter()
@@ -25,6 +26,9 @@ class SignupRequest(BaseModel):
     email:    str
     username: str
     password: str
+
+class GoogleAuthRequest(BaseModel):
+    access_token: str
 
 class LoginRequest(BaseModel):
     email:    str
@@ -88,6 +92,52 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
         "username": user.username,
         "user_id":  user.id
     }
+
+@router.post("/google")
+def google_auth(req: GoogleAuthRequest, db: Session = Depends(get_db)):
+    try:
+        google_res = requests.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {req.access_token}"}
+        )
+        if google_res.status_code != 200:
+            raise HTTPException(status_code=401, detail="Invalid Google token")
+        
+        user_info = google_res.json()
+        email = user_info.get("email")
+        name = user_info.get("given_name") or user_info.get("name") or email.split('@')[0]
+
+        if not email:
+            raise HTTPException(status_code=400, detail="Google account has no email")
+            
+        user = db.query(User).filter(User.email == email).first()
+        
+        if not user:
+            # ensure username uniqueness
+            base_name = name
+            counter = 1
+            while db.query(User).filter(User.username == name).first():
+                name = f"{base_name}{counter}"
+                counter += 1
+
+            user = User(
+                email=email,
+                username=name,
+                password=pwd_context.hash(os.urandom(16).hex())
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+
+        return {
+            "token":    create_token(user.id),
+            "username": user.username,
+            "user_id":  user.id
+        }
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Google auth error: {str(e)}")
 
 # ── onboarding routes ─────────────────────────────────────
 @router.get("/onboarding/status")

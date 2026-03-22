@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getCheckinStatus, submitCheckin, getWeeklyReport } from '../api/client'
+import Loader from '../components/Loader'
 
 const QUESTIONS = [
     {
@@ -114,16 +115,7 @@ export default function NightlyCheckin() {
             <div style={{ flex: 1, overflow: 'auto', padding: '32px 28px' }}>
 
                 {loading && (
-                    <div style={{ textAlign: 'center', padding: '60px 0' }}>
-                        <div style={{
-                            width: '36px', height: '36px',
-                            border: '2px solid var(--border2)',
-                            borderTop: '2px solid var(--purple)',
-                            borderRadius: '50%', margin: '0 auto 16px',
-                            animation: 'spin 1s linear infinite'
-                        }} />
-                        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                    </div>
+                    <Loader text="Loading check-in..." />
                 )}
 
                 {/* Checkin tab */}
@@ -267,7 +259,7 @@ export default function NightlyCheckin() {
                                 </div>
 
                                 <div style={{ padding: '24px' }}>
-                                    {QUESTIONS.map((q, i) => (
+                                    {QUESTIONS.map((q) => (
                                         <div key={q.id} style={{ marginBottom: '20px' }}>
                                             <div style={{
                                                 display: 'flex', alignItems: 'center',

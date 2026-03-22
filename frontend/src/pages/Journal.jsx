@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'          // ← add
 import { submitEntry } from '../api/client'
+import Loader from '../components/Loader'
 
 export default function Journal() {
     const [text, setText] = useState('')
@@ -63,16 +64,66 @@ export default function Journal() {
             {/* Content — unchanged */}
             <div style={{ flex: 1, overflow: 'auto', padding: '32px 28px', maxWidth: '720px', width: '100%', margin: '0 auto' }}>
 
-                {/* Editor — unchanged */}
+                {/* Editor with dynamic hero */}
                 {!insight && (
                     <div style={{
                         background: 'var(--bg2)', border: '1px solid var(--border)',
                         borderRadius: '16px', display: 'flex', flexDirection: 'column',
-                        overflow: 'hidden'
+                        overflow: 'hidden', transition: 'all 0.5s ease',
+                        boxShadow: text.length > 0 ? 'none' : '0 20px 40px rgba(138,110,255,0.06)'
                     }}>
+                        {/* HERO SECTION — gracefully collapses when typing begins */}
+                        <div style={{
+                            padding: text.length > 0 ? '0 40px' : '48px 40px 36px',
+                            maxHeight: text.length > 0 ? '0px' : '500px',
+                            opacity: text.length > 0 ? 0 : 1,
+                            overflow: 'hidden',
+                            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                            borderBottom: text.length > 0 ? '0px solid transparent' : '1px solid var(--border)',
+                            background: 'linear-gradient(180deg, rgba(138,110,255,0.12) 0%, rgba(138,110,255,0.02) 100%)'
+                        }}>
+                            <div style={{
+                                display: 'inline-block', padding: '4px 12px', borderRadius: '20px',
+                                background: 'rgba(138,110,255,0.15)', color: 'var(--purple3)',
+                                fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em',
+                                marginBottom: '16px', fontWeight: '500', border: '1px solid rgba(138,110,255,0.3)'
+                            }}>
+                                Your AI Journal
+                            </div>
+                            <div style={{
+                                fontFamily: 'var(--font-serif)', fontSize: '38px',
+                                color: 'var(--text)', marginBottom: '16px', lineHeight: '1.2'
+                            }}>
+                                Welcome to <span style={{ color: 'var(--purple3)', fontStyle: 'italic' }}>Mind Mirror</span>
+                            </div>
+                            <div style={{ fontSize: '15px', color: 'var(--text2)', lineHeight: '1.7', marginBottom: '32px', maxWidth: '580px' }}>
+                                Don't just vent into an empty void. Write your thoughts below, and our emotionally intelligent AI will analyze your patterns, track your energy drains, and give you actionable reflections tailored entirely to you.
+                            </div>
+                            
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
+                                {[
+                                    { icon: '✨', title: 'Instant insights', desc: 'A fresh perspective the moment you hit reflect.' },
+                                    { icon: '🔋', title: 'Energy tracking', desc: 'Identify who and what drains or fuels you.' },
+                                    { icon: '🧠', title: 'Pattern detection', desc: 'Uncover your own subconscious themes.' }
+                                ].map((feature, i) => (
+                                    <div key={i} style={{
+                                        background: 'var(--surface)', border: '1px solid rgba(138,110,255,0.15)',
+                                        borderRadius: '12px', padding: '16px'
+                                    }}>
+                                        <div style={{ fontSize: '20px', marginBottom: '10px' }}>{feature.icon}</div>
+                                        <div style={{ fontSize: '12px', color: 'var(--text)', fontWeight: '500', marginBottom: '4px' }}>{feature.title}</div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text3)', lineHeight: '1.5' }}>{feature.desc}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Editor Header */}
                         <div style={{
                             padding: '20px 24px 16px', borderBottom: '1px solid var(--border)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            background: text.length > 0 ? 'var(--bg2)' : 'transparent',
+                            transition: 'background 0.4s'
                         }}>
                             <div style={{
                                 fontFamily: 'var(--font-serif)', fontSize: '16px',
@@ -85,20 +136,30 @@ export default function Journal() {
                             </div>
                         </div>
 
+                        {/* Textarea */}
                         <textarea
                             value={text}
                             onChange={e => setText(e.target.value)}
-                            placeholder="What's on your mind today..."
+                            placeholder={text.length === 0 ? "Start typing right here, and watch the mirror come alive..." : "What's on your mind today..."}
                             style={{
-                                minHeight: '320px', background: 'transparent',
+                                minHeight: text.length > 0 ? '340px' : '160px',
+                                transition: 'all 0.5s ease',
+                                background: 'transparent',
                                 border: 'none', outline: 'none', color: 'var(--text)',
-                                fontFamily: 'var(--font-sans)', fontSize: '15px',
+                                fontFamily: 'var(--font-sans)', fontSize: '16px',
                                 lineHeight: '1.8', padding: '24px', resize: 'none',
                                 caretColor: 'var(--purple)'
                             }}
                         />
 
-                        <div style={{ padding: '0 24px 16px' }}>
+                        {/* Prompts section */}
+                        <div style={{ 
+                            padding: '0 24px 16px', 
+                            height: text.length > 0 ? '0px' : '60px',
+                            opacity: text.length > 0 ? 0 : 1,
+                            overflow: 'hidden',
+                            transition: 'all 0.4s ease'
+                        }}>
                             <div style={{ fontSize: '10px', color: 'var(--text3)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                                 Need a prompt?
                             </div>
@@ -109,13 +170,14 @@ export default function Journal() {
                                     'When did I feel most like myself?'
                                 ].map((prompt, i) => (
                                     <div key={i} onClick={() => setText(prompt + ' ')} style={{
-                                        fontSize: '11px', color: 'var(--text3)',
-                                        padding: '4px 10px', borderRadius: '20px',
-                                        border: '1px solid var(--border2)', cursor: 'pointer',
-                                        transition: 'all 0.15s'
+                                        fontSize: '11px', color: 'var(--purple3)',
+                                        padding: '5px 12px', borderRadius: '20px',
+                                        border: '1px solid rgba(138,110,255,0.3)', cursor: 'pointer',
+                                        transition: 'all 0.15s',
+                                        background: 'rgba(138,110,255,0.05)'
                                     }}
-                                        onMouseEnter={e => { e.target.style.color = 'var(--purple3)'; e.target.style.borderColor = 'var(--purple)' }}
-                                        onMouseLeave={e => { e.target.style.color = 'var(--text3)'; e.target.style.borderColor = 'var(--border2)' }}
+                                        onMouseEnter={e => { e.target.style.background = 'rgba(138,110,255,0.15)' }}
+                                        onMouseLeave={e => { e.target.style.background = 'rgba(138,110,255,0.05)' }}
                                     >
                                         {prompt}
                                     </div>
@@ -123,14 +185,17 @@ export default function Journal() {
                             </div>
                         </div>
 
+                        {/* Footer */}
                         <div style={{
                             padding: '16px 24px', borderTop: '1px solid var(--border)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            background: 'var(--surface)',
+                            transition: 'background 0.4s'
                         }}>
                             {error
                                 ? <div style={{ fontSize: '12px', color: 'var(--coral)' }}>{error}</div>
                                 : <div style={{ fontSize: '12px', color: 'var(--text3)' }}>
-                                    {loading ? 'Reading your entry...' : 'This is your safe space'}
+                                    {loading ? 'Reading your entry...' : 'Your reflections are entirely private'}
                                 </div>
                             }
                             <button className="btn-primary" onClick={handleSubmit} disabled={loading || !text.trim()}>
@@ -142,19 +207,7 @@ export default function Journal() {
 
                 {/* Loading — unchanged */}
                 {loading && (
-                    <div style={{ textAlign: 'center', padding: '60px 0' }}>
-                        <div style={{
-                            width: '40px', height: '40px',
-                            border: '2px solid var(--border2)',
-                            borderTop: '2px solid var(--purple)',
-                            borderRadius: '50%', margin: '0 auto 20px',
-                            animation: 'spin 1s linear infinite'
-                        }} />
-                        <div style={{ fontSize: '13px', color: 'var(--text3)', fontStyle: 'italic' }}>
-                            Reading what you wrote...
-                        </div>
-                        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                    </div>
+                    <Loader text="Reading what you wrote..." />
                 )}
 
                 {/* Insight section */}

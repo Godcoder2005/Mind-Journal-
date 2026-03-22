@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getFutureLetter, generateFutureLetter, getAllLetters } from '../api/client'
+import Loader from '../components/Loader'
 
 export default function FutureLetter() {
     const [letter, setLetter] = useState(null)
@@ -80,16 +81,7 @@ export default function FutureLetter() {
             <div style={{ flex: 1, overflow: 'auto', padding: '32px 28px' }}>
 
                 {loading && (
-                    <div style={{ textAlign: 'center', padding: '60px 0' }}>
-                        <div style={{
-                            width: '36px', height: '36px',
-                            border: '2px solid var(--border2)',
-                            borderTop: '2px solid var(--purple)',
-                            borderRadius: '50%', margin: '0 auto 16px',
-                            animation: 'spin 1s linear infinite'
-                        }} />
-                        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                    </div>
+                    <Loader text="Loading your letters..." />
                 )}
 
                 {/* Current letter tab */}

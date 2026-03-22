@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getUserStats, getOnboardingProfile } from '../api/client'
+import Loader from '../components/Loader'
 
 export default function Progress() {
     const [stats, setStats] = useState(null)
@@ -15,7 +16,7 @@ export default function Progress() {
                     try {
                         const p = await getOnboardingProfile()
                         if (p.data?.ready) setProfile(p.data)
-                    } catch { }
+                    } catch { /* ignore */ }
                 }
             } catch (err) {
                 console.error(err)
@@ -28,13 +29,7 @@ export default function Progress() {
 
     if (loading) return (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{
-                width: '36px', height: '36px',
-                border: '2px solid var(--border2)',
-                borderTop: '2px solid var(--purple)',
-                borderRadius: '50%', animation: 'spin 1s linear infinite'
-            }} />
-            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+            <Loader text="Loading your progress..." />
         </div>
     )
 
